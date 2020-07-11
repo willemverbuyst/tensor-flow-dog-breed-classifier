@@ -10,17 +10,26 @@ const stateMachine = {
     awaitingUpload: { on: { next: 'ready' } },
     ready: { on: { next: 'classifying' }, showImage: true },
     classifying: { on: { next: 'complete' } },
-    complete: { on: { next: 'awaitingUpload' }, showImage: true },
+    complete: {
+      on: { next: 'awaitingUpload' },
+      showImage: true,
+      showResults: true,
+    },
   },
 };
 
 const reducer = (currentState, event) =>
   stateMachine.states[currentState].on[event] || stateMachine.initialState;
 
+const formatResult = ({ className, probability }) => (
+  <li key={className}>{`${className}: %${(probability * 100).toFixed(2)}`}</li>
+);
+
 function App() {
   const [state, dispatch] = useReducer(reducer, stateMachine.initialState);
   const [model, setModel] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
+  const [results, setResults] = useState([]);
   const inputRef = useRef();
   const imageRef = useRef();
 
@@ -42,20 +51,31 @@ function App() {
     }
   };
 
+  const identify = async () => {
+    next();
+    const classificationResults = await model.classify(imageRef.current);
+    setResults(classificationResults);
+    next();
+  };
+
   const buttonProps = {
     initial: { text: 'Load Model', action: loadModel },
     loadingModel: { text: 'Loading model ...', action: () => {} },
-    awaitingUpload: { text: 'Upload photo', action: () => {} },
-    ready: { text: 'Identify', action: () => {} },
+    awaitingUpload: {
+      text: 'Upload photo',
+      action: () => inputRef.current.click(),
+    },
+    ready: { text: 'identify', action: identify },
     classifying: { text: 'Identifying', action: () => {} },
     complete: { text: 'Reset', action: () => {} },
   };
 
-  const { showImage = false } = stateMachine.states[state];
+  const { showImage = false, showResults = false } = stateMachine.states[state];
 
   return (
     <div>
       {showImage && <img alt="upload preview" src={imageUrl} ref={imageRef} />}
+      {showResults && <ul>{results.map(formatResult)}</ul>}
       <input
         type="file"
         accept="image/*"
