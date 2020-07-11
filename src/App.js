@@ -16,18 +16,21 @@ const stateMachine = {
 
 const reducer = (currentState, event) =>
   stateMachine.states[currentState].on[event] || stateMachine.initialState;
-const [model, setModel] = useState(null);
 
 function App() {
   const [state, dispatch] = useReducer(reducer, stateMachine.initialState);
+  const [model, setModel] = useState(null);
   const next = () => dispatch('next');
 
   const loadModel = async () => {
+    next();
     const mobilenetModel = await mobilenet.load();
+    setModel(mobilenetModel);
+    next();
   };
 
   const buttonProps = {
-    initial: { text: 'Load Model', action: () => {} },
+    initial: { text: 'Load Model', action: loadModel },
     loadingModel: { text: 'Loading model ...', action: () => {} },
     awaitingUpload: { text: 'Upload photo', action: () => {} },
     ready: { text: 'Identify', action: () => {} },
