@@ -58,6 +58,12 @@ function App() {
     next();
   };
 
+  const reset = () => {
+    setResults([]);
+    setImageUrl(null);
+    next();
+  };
+
   const buttonProps = {
     initial: { text: 'Load Model', action: loadModel },
     loadingModel: { text: 'Loading model ...', action: () => {} },
@@ -67,7 +73,7 @@ function App() {
     },
     ready: { text: 'identify', action: identify },
     classifying: { text: 'Identifying', action: () => {} },
-    complete: { text: 'Reset', action: () => {} },
+    complete: { text: 'Reset', action: reset },
   };
 
   const { showImage = false, showResults = false } = stateMachine.states[state];
