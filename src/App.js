@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from 'react';
+import React, { useReducer, useState, useRef } from 'react';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import './App.css';
 
@@ -20,6 +20,10 @@ const reducer = (currentState, event) =>
 function App() {
   const [state, dispatch] = useReducer(reducer, stateMachine.initialState);
   const [model, setModel] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const inputRef = useRef();
+  const imageRef = useRef();
+
   const next = () => dispatch('next');
 
   const loadModel = async () => {
@@ -27,6 +31,15 @@ function App() {
     const mobilenetModel = await mobilenet.load();
     setModel(mobilenetModel);
     next();
+  };
+
+  const handleUpload = (e) => {
+    const { files } = e.target;
+    if (files.length > 0) {
+      const url = URL.createObjectURL(files[0]);
+      setImageUrl(url);
+      next();
+    }
   };
 
   const buttonProps = {
@@ -38,8 +51,18 @@ function App() {
     complete: { text: 'Reset', action: () => {} },
   };
 
+  const { showImage = false } = stateMachine.states[state];
+
   return (
     <div>
+      {showImage && <img alt="upload preview" src={imageUrl} ref={imageRef} />}
+      <input
+        type="file"
+        accept="image/*"
+        capture="camera"
+        ref={inputRef}
+        onChange={handleUpload}
+      />
       <button onClick={buttonProps[state].action}>
         {buttonProps[state].text}
       </button>
